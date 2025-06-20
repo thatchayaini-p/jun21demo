@@ -1,12 +1,12 @@
-name: Docker Build and Push 
-  
-on: 
-  push:   
-    branches:      
-      - main  
-  pull_request:   
-    branches: 
-      - main 
+name: Docker Build and Push
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build-and-deploy:
@@ -15,14 +15,33 @@ jobs:
     env:
       DOCKER_USERNAME: thatchayaini123
       IMAGE_NAME: jun21demo
-      TAG: latest 
+      TAG: latest
+      CONTAINER_NAME: mycontainer
+      PORT: 3000
 
     steps:
       - name: 🔄 Checkout Code
         uses: actions/checkout@v4
 
-      - name: 🛠️ Make script executable
-        run: chmod +x /home/bsetec/jun21/jun21demo/buildpush.sh
+      - name: 🔐 Docker Login
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u $DOCKER_USERNAME --password-stdin
 
-      - name: 🚀 Run Custom Script 
-        run: bash /home/bsetec/jun21/jun21demo/buildpush.sh
+      - name: ⚙️ Build Docker Image
+        run: |
+          docker build -t $DOCKER_USERNAME/$IMAGE_NAME:$TAG .
+
+      - name: 🧹 Remove Old Container If Exists
+        run: |
+          if [ "$(docker ps -aq -f name=$CONTAINER_NAME)" ]; then
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+          fi
+
+      - name: 🚀 Run Docker Container
+        run: |
+          docker run -d --name $CONTAINER_NAME -p $PORT:$PORT $DOCKER_USERNAME/$IMAGE_NAME:$TAG
+
+      - name: 📤 Push to Docker Hub
+        run: |
+          docker push $DOCKER_USERNAME/$IMAGE_NAME:$TAG
+
