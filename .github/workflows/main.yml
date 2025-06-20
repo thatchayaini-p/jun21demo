@@ -23,9 +23,6 @@ jobs:
       - name: 🔄 Checkout Code
         uses: actions/checkout@v4
 
-      - name: 🔐 Docker Login
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u $DOCKER_USERNAME --password-stdin
-
       - name: ⚙️ Build Docker Image
         run: |
           docker build -t $DOCKER_USERNAME/$IMAGE_NAME:$TAG .
